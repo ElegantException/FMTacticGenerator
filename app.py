@@ -481,9 +481,9 @@ if uploaded_file:
 
     st.markdown("### 🛡️ Tough Opponent Variant")
     st.markdown(f"**Mentality:** {tough_variant['Mentality']}")
-    display_instruction_block("In Possession", "🛡️", tough_variant["In Possession"])
-    display_instruction_block("In Transition", "🛡️", tough_variant["In Transition"])
-    display_instruction_block("Out of Possession", "🛡️", tough_variant["Out of Possession"])
+    display_instruction_block("In Possession", "🟢", tough_variant["In Possession"])
+    display_instruction_block("In Transition", "🟡", tough_variant["In Transition"])
+    display_instruction_block("Out of Possession", "🔴", tough_variant["Out of Possession"])
 
     #BEST 11 LINEUP
     st.markdown("### 🪖 Starting XI")
