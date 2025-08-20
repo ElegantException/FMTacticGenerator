@@ -266,7 +266,9 @@ with col2:
     with st.popover("❓"):
         st.markdown("""
         1. Download and extract the squad view that contains all attributes:   
-        <a href="https://raw.githubusercontent.com/ElegantException/FMTacticGenerator/4fa8d709eaca6642cbbd25ed59c6101a1c105ebe/assets/FMTacticGenerator-all_attributes.zip</a> <br>
+        <a href="https://raw.githubusercontent.com/ElegantException/FMTacticGenerator/4fa8d709eaca6642cbbd25ed59c6101a1c105ebe/assets/FMTacticGenerator-all_attributes.zip" download style="text-decoration: none; color: #1E90FF;">
+📄 FMTacticGenerator-all_attributes.zip
+</a><br>
         2. In Football Manager, go to your Squad screen.  <br>
         3. Go to the View and Import the downloaded file from step 1.  <br>
         4. Click your shortcut to select all the players on the screen (Win: CTRL + A OR MAC: ⌘ + A). All players should have a green checkmark next to them. <br>
