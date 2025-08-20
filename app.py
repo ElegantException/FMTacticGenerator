@@ -468,7 +468,7 @@ if uploaded_file:
         # Step 5: Display in Streamlit
         st.plotly_chart(fig, use_container_width=True)
         
-
+    st.markdown("### Potential Gaps in Formation")
     #Analyze formation gaps
     for item in gap_analysis:
         with st.expander(f"{item['Area']} — {item['Verdict']}"):
