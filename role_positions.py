@@ -96,7 +96,7 @@ ROLE_POSITION_MAP = {
 
     # ⚙️ Central Midfielders
     "Central Midfielder": ["MC", "ML", "MR"],
-    "Box-To-Box Midfielder": ["MC", "ML", "MR"],
+    "Box-To-Box Midfielder": ["MC", "M","ML", "MR"],
     "Mezzala": ["ML", "MR", "MC"],
     "Carrilero": ["ML", "MR", "MC"],
     "Deep-Lying Playmaker": ["ML", "MR","MC", "DMC"],
