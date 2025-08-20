@@ -2,7 +2,7 @@
 import streamlit as st
 import pandas as pd
 from parse_squad_html import parse_squad_html  # or wherever your parser is
-from tactic_generator import TacticGenerator,analyze_formation_gaps,sanity_check_instructions
+from tactic_generator import TacticGenerator,analyze_formation_gaps,sanity_check_instructions,SquadAnalyzer, VariantGenerator
 from role_positions import ROLE_POSITION_SHORT
 from roles import ROLE_FLEX_MAP
 from synergy import calculate_synergy, select_best_pairing
@@ -12,6 +12,7 @@ import plotly.graph_objects as go
 from formations import formations, ZONE_MAP  # or define directly above if it's short
 from collections import defaultdict
 import base64
+
 
 def format_value(value):
     return f"""
@@ -472,6 +473,11 @@ if uploaded_file:
     for item in gap_analysis:
         with st.expander(f"{item['Area']} — {item['Verdict']}"):
             st.write(f"**Suggested Fix:** {item['Fix']}")
+
+    
+    analyzer = SquadAnalyzer(best_lineup)
+    variant_generator = VariantGenerator(analyzer)
+    tough_variant = variant_generator.generate("ToughOpponent")
 
     st.markdown("### 🛡️ Tough Opponent Variant")
     st.markdown(f"**Mentality:** {tough_variant['Mentality']}")
