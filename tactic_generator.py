@@ -370,6 +370,7 @@ class TacticGenerator:
             self.mentality = "Cautious"
 
         return self.mentality
+    
     def find_best_roles_per_player(self):
         scored_players = []
         full_score_players = []
@@ -834,5 +835,321 @@ class TacticGenerator:
                     p["zones"] = ZONE_MAP.get(best_alternative, {}).get(p["side"], [])
 
         return lineup
+
+class SquadAnalyzer:
+    def __init__(self, squad):
+        self.squad = squad
+        self.positions = [p.get("position") for p in squad if p.get("position")]
+        self.position_counts = self._count_positions()
+
+    def _count_positions(self):
+        counts = {}
+        for pos in self.positions:
+            counts[pos] = counts.get(pos, 0) + 1
+        return counts
+
+    def get_role_avg(self, roles, attributes):
+        players = [p for p in self.squad if p.get("position") in roles]
+        if not players:
+            print(f"⚠️ No players found for roles: {roles}")
+            return {attr: 0 for attr in attributes}
+
+        return {
+            attr: sum(p["attributes"].get(attr, 0) for p in players) / len(players)
+            for attr in attributes
+        }
+
+    def get_min_attribute(self, role, attribute):
+        values = [p["attributes"].get(attribute, 0) for p in self.squad if p.get("position") == role]
+        if not values:
+            print(f"⚠️ No players found for role: {role}")
+            return 0
+        return min(values)
+
+    def get_max_attribute(self, roles, attribute):
+        values = [p["attributes"].get(attribute, 0) for p in self.squad if p.get("position") in roles]
+        if not values:
+            print(f"⚠️ No players found for roles: {roles}")
+            return 0
+        return max(values)
+
+    def has_role(self, role):
+        return role in self.positions
+
+    def has_any_role(self, roles):
+        return any(role in self.positions for role in roles)
+
+    def get_formation(self):
+        # Infer formation from position counts
+        def_count = sum(1 for r in self.positions if "Defender" in r)
+        mid_count = sum(1 for r in self.positions if "Midfielder" in r)
+        fwd_count = sum(1 for r in self.positions if "Forward" in r or "Striker" in r)
+
+        return f"{def_count}-{mid_count}-{fwd_count}"
+
+    def get_position_count(self, role):
+        return self.position_counts.get(role, 0)
+
+    def get_attribute_distribution(self, attribute):
+        return [p["attributes"].get(attribute, 0) for p in self.squad if attribute in p["attributes"]]
+
+    def get_average_attribute(self, attribute):
+        values = self.get_attribute_distribution(attribute)
+        return sum(values) / len(values) if values else 0
+
+    def get_squad_summary(self):
+        return {
+            "Total Players": len(self.squad),
+            "Formation": self.get_formation(),
+            "Position Counts": self.position_counts,
+            "Average Work Rate": self.get_average_attribute("Work Rate"),
+            "Average Stamina": self.get_average_attribute("Stamina"),
+            "Average Flair": self.get_average_attribute("Flair")
+        }
+
+
+class RoleAdjuster:
+    def suggest_role(self, player):
+        if player.get("role") == "AM" and player["attributes"].get("Tackling", 0) > 12:
+            return "CM(Support)"
+        if player.get("role") == "Winger" and player["attributes"].get("Pace", 0) < 11:
+            return "Wide Midfielder(Support)"
+        if player.get("role") == "ST" and player["attributes"].get("Strength", 0) > 14:
+            return "Target Man(Support)"
+        return player.get("role", "Unknown")
+
+class OutOfPossessionInstructions:
+    def __init__(self, analyzer, opponent):
+        self.analyzer = analyzer  # Your team analyzer
+        self.opponent = opponent  # Opponent squad list
+
+    def generate(self):
+        return {
+            "Out of Possession": {
+                "Defensive Line": self._defensive_line(),
+                "Line of Engagement": self._engagement_line(),
+                "Trap": self._trap_logic(),
+                "Cross Engagement": self._cross_engagement_logic(),
+                "Pressing": self._pressing_intensity(),
+                "Compactness": self._compactness(),
+                "Marking": self._marking_strategy(),
+                "Width": self._defensive_width()
+            }
+        }
+
+    def _defensive_line(self):
+        pacey_defenders = sum(1 for p in self.analyzer.squad if p["attributes"].get("Pace", 0) >= 14)
+        fast_opponents = sum(1 for p in self.opponent if p["attributes"].get("Pace", 0) >= 15)
+
+        if pacey_defenders >= 3 and fast_opponents < 2:
+            return "Higher Defensive Line"
+        elif fast_opponents >= 3:
+            return "Lower Defensive Line"
+        return "Standard Defensive Line"
+
+    def _engagement_line(self):
+        stamina_monsters = sum(1 for p in self.analyzer.squad if p["attributes"].get("Stamina", 0) >= 15)
+        press_resistant_opponents = sum(1 for p in self.opponent if p["attributes"].get("Composure", 0) >= 14)
+
+        if stamina_monsters >= 4 and press_resistant_opponents < 2:
+            return "High Line of Engagement"
+        return "Mid Block"
+
+    def _trap_logic(self):
+        weak_central = sum(1 for p in self.opponent if p["position"] in ["Central Midfielder", "Defensive Midfielder"]
+                           and p["attributes"].get("Composure", 0) <= 11)
+        dangerous_wings = sum(1 for p in self.opponent if p["position"] in ["Winger", "Wide Midfielder"]
+                              and p["attributes"].get("Dribbling", 0) >= 14)
+
+        if weak_central >= 2:
+            return "Trap Inside"
+        elif dangerous_wings >= 2:
+            return "Trap Outside"
+        return "Neutral Trap"
+
+    def _cross_engagement_logic(self):
+        strong_headers = sum(1 for p in self.analyzer.squad if p["attributes"].get("Heading", 0) >= 14)
+        opponent_crossers = sum(1 for p in self.opponent if p["attributes"].get("Crossing", 0) >= 14)
+        aerial_weakness = sum(1 for p in self.analyzer.squad if p["attributes"].get("Jumping Reach", 0) <= 10)
+
+        if strong_headers >= 3 and opponent_crossers < 2:
+            return "Invite Crosses"
+        elif opponent_crossers >= 3 or aerial_weakness >= 3:
+            return "Stop Crosses"
+        return "Neutral"
+
+    def _pressing_intensity(self):
+        work_rate_avg = sum(p["attributes"].get("Work Rate", 0) for p in self.analyzer.squad) / len(self.analyzer.squad)
+        composure_avg = sum(p["attributes"].get("Composure", 0) for p in self.opponent) / len(self.opponent)
+
+        if work_rate_avg >= 14 and composure_avg <= 12:
+            return "More Urgent Pressing"
+        elif work_rate_avg <= 10:
+            return "Standard Pressing"
+        return "Balanced Pressing"
+
+    def _compactness(self):
+        aggression_avg = sum(p["attributes"].get("Aggression", 0) for p in self.analyzer.squad) / len(self.analyzer.squad)
+        if aggression_avg >= 14:
+            return "Very Compact"
+        elif aggression_avg <= 10:
+            return "Loose Shape"
+        return "Balanced Compactness"
+
+    def _marking_strategy(self):
+        playmakers = [p for p in self.opponent if p["attributes"].get("Vision", 0) >= 15 and p["attributes"].get("Passing", 0) >= 15]
+        if len(playmakers) >= 2:
+            return "Man Mark Playmakers"
+        dangerous_forwards = [p for p in self.opponent if p["position"] in ["Striker", "Inside Forward"]
+                              and p["attributes"].get("Finishing", 0) >= 15]
+        if len(dangerous_forwards) >= 2:
+            return "Tight Marking on Forwards"
+        return "Zonal Marking"
+
+    def _defensive_width(self):
+        wide_threats = sum(1 for p in self.opponent if p["position"] in ["Winger", "Wing Back"]
+                           and p["attributes"].get("Acceleration", 0) >= 14)
+        narrow_threats = sum(1 for p in self.opponent if p["position"] in ["Attacking Midfielder", "Striker"]
+                             and p["attributes"].get("Off the Ball", 0) >= 14)
+
+        if wide_threats >= 3:
+            return "Wider Defensive Shape"
+        elif narrow_threats >= 3:
+            return "Narrow Defensive Shape"
+        return "Standard Width"
     
-            
+class VariantGenerator:
+    def __init__(self, analyzer):
+        self.analyzer = analyzer
+        self.formation = analyzer.get_formation()  # e.g. "4-3-3", "3-5-2"
+
+    def generate(self, scenario):
+        if scenario == "ToughOpponent":
+            return self._generate_variant(defensive=True)
+        elif scenario == "ProtectLead":
+            return self._generate_variant(protect=True)
+        elif scenario == "LatePush":
+            return self._generate_variant(attacking=True)
+        return self._generate_variant()
+
+    def _generate_variant(self, defensive=False, protect=False, attacking=False):
+        instructions = {}
+
+        # Mentality
+        mentality = self._calculate_mentality(defensive, protect, attacking)
+        instructions["Mentality"] = mentality
+
+        # Out of Possession
+        instructions["Out of Possession"] = self._out_of_possession(defensive, protect, attacking)
+
+        # In Transition
+        instructions["In Transition"] = self._in_transition(defensive, protect, attacking)
+
+        # In Possession
+        instructions["In Possession"] = self._in_possession(defensive, protect, attacking)
+
+        return instructions
+
+    def _calculate_mentality(self, defensive, protect, attacking):
+        def_roles = ["Central Defender", "Defensive Midfielder", "Anchor Man"]
+        def_stats = self.analyzer.get_role_avg(def_roles, ["Composure", "Positioning"])
+        score = def_stats["Composure"] + def_stats["Positioning"]
+
+        if attacking:
+            return "Attacking" if score < 24 else "Positive"
+        if protect:
+            return "Defensive" if score > 24 else "Cautious"
+        if defensive:
+            return "Cautious" if score > 24 else "Defensive"
+        return "Balanced"
+
+    def _out_of_possession(self, defensive, protect, attacking):
+        cb_pace = self.analyzer.get_min_attribute("Central Defender", "Pace")
+        wide_roles = ["Full Back", "Wing Back"]
+        has_wide_defenders = any(p["position"] in wide_roles for p in self.analyzer.squad)
+
+        line = "Lower" if cb_pace <= 13 else "Higher" if cb_pace >= 15 else "Standard"
+        engagement = "Low Block" if defensive or protect else "High Press" if attacking else "Mid Block"
+        press_freq = "Much More Often" if attacking else "Much Less Often" if protect else "Balanced"
+        tackling = "Get Stuck In" if attacking else "Stay on Feet"
+        setup = "Drop Off More" if cb_pace < 11 else "Step Up More" if cb_pace > 14 else "OFF"
+        trap = "Trap Outside" if has_wide_defenders else "Trap Inside"
+        cross_engagement = self._cross_engagement_logic()
+
+        return {
+            "Defensive Line": line,
+            "Line of Engagement": engagement,
+            "Trigger Press": press_freq,
+            "Prevent Short GK": True,
+            "Tackling": tackling,
+            "Defensive Line Setup": setup,
+            "Pressing Trap": trap,
+            "Cross Engagement": cross_engagement
+        }
+
+    def _in_transition(self, defensive, protect, attacking):
+        passing_roles = ["Central Midfielder", "Deep-Lying Playmaker"]
+        passing = self.analyzer.get_max_attribute(passing_roles, "Passing")
+        accel = self.analyzer.get_role_avg(["Striker", "Box-To-Box Midfielder"], ["Acceleration"])["Acceleration"]
+
+        lost = "Regroup" if defensive or protect else "Counter-Press" if attacking else "Balanced"
+        won = "Counter" if passing >= 14 and accel >= 13 else "Hold Shape"
+        area = "Quick" if attacking else "Centre Backs" if protect else "Full Backs"
+        gk_type = "Take Long Kicks" if attacking else "Take Short Kicks"
+
+        return {
+            "When Possession Lost": lost,
+            "When Possession Won": won,
+            "Distribution Area": area,
+            "GK Distribution Type": gk_type
+        }
+
+    def _in_possession(self, defensive, protect, attacking):
+        tech = self.analyzer.get_role_avg(["Advanced Playmaker", "Attacking Midfielder"], ["Technique"])["Technique"]
+        dribbling = self.analyzer.get_role_avg(["Winger", "Attacking Midfielder"], ["Dribbling"])["Dribbling"]
+        flair = self.analyzer.get_role_avg(["Advanced Playmaker", "Trequartista"], ["Flair"])["Flair"]
+        crossing = self.analyzer.get_role_avg(["Winger", "Wing Back"], ["Crossing"])["Crossing"]
+
+        tempo = "Higher" if attacking else "Lowest" if protect else "Lower" if tech >= 13 else "Standard"
+        passing = "Direct" if attacking else "Short" if tech >= 12 else "Mixed"
+        width = "Wide" if "3" in self.formation.split("-")[0] else "Narrow" if protect else "Standard"
+        cross_type = "Whipped Crosses" if crossing >= 13 else "Low Crosses" if protect else "Mixed Crosses"
+        dribble = "Run at Defence" if dribbling >= 13 else "Dribble Less" if dribbling <= 10 else "Balanced"
+        creativity = "Be More Expressive" if flair >= 14 else "Be More Disciplined" if flair <= 10 else "Balanced"
+        time_wasting = "Maximum" if protect else "Never" if attacking else "Often"
+        set_pieces = True if protect else False
+
+        final_third = {
+            "Work Ball Into Box": not attacking,
+            "Shoot On Sight": attacking,
+            "Hit Early Crosses": attacking,
+            "Hold Shape": protect,
+            "Cross Type": cross_type
+        }
+
+        return {
+            "Tempo": tempo,
+            "Passing": passing,
+            "Width": width,
+            "Final Third": final_third,
+            "Time Wasting": time_wasting,
+            "Play for Set Pieces": set_pieces,
+            "Dribbling": dribble,
+            "Creative Freedom": creativity
+        }
+
+    def _cross_engagement_logic(self):
+        defenders = [p for p in self.analyzer.squad if p.get("position") in [
+            "Central Defender", "Ball Playing Defender", "Full Back", "Wing Back"
+        ]]
+        if not defenders:
+            return "Neutral"
+
+        strong_headers = sum(1 for p in defenders if p["attributes"].get("Heading", 0) >= 14)
+        wide_defenders = [p for p in defenders if p.get("position") in ["Full Back", "Wing Back"]]
+
+        if strong_headers >= 3 and not wide_defenders:
+            return "Invite Crosses"
+        elif wide_defenders:
+            return "Stop Crosses"
+        return "Neutral"
