@@ -851,7 +851,7 @@ class SquadAnalyzer:
     def get_role_avg(self, roles, attributes):
         players = [p for p in self.squad if p.get("position") in roles]
         if not players:
-            print(f"⚠️ No players found for roles: {roles}")
+            #print(f"⚠️ No players found for roles: {roles}")
             return {attr: 0 for attr in attributes}
 
         return {
@@ -862,14 +862,14 @@ class SquadAnalyzer:
     def get_min_attribute(self, role, attribute):
         values = [p["attributes"].get(attribute, 0) for p in self.squad if p.get("position") == role]
         if not values:
-            print(f"⚠️ No players found for role: {role}")
+            #print(f"⚠️ No players found for role: {role}")
             return 0
         return min(values)
 
     def get_max_attribute(self, roles, attribute):
         values = [p["attributes"].get(attribute, 0) for p in self.squad if p.get("position") in roles]
         if not values:
-            print(f"⚠️ No players found for roles: {roles}")
+            #print(f"⚠️ No players found for roles: {roles}")
             return 0
         return max(values)
 
