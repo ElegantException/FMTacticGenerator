@@ -145,7 +145,7 @@ with col2:
 
   
 # Uploader sits just below the header row
-uploaded_file = st.file_uploader("", type=["html", "htm"])
+uploaded_file = st.file_uploader(" ", type=["html", "htm"])
 
 
 if uploaded_file:
