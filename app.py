@@ -383,8 +383,8 @@ if uploaded_file:
             "lineup": lineup,
             "roles": roles,
             "formation": formation,
-            "synergy_pairing": best_pairing["roles"],
-            "synergy_score": synergy_score
+            #"synergy_pairing": best_pairing["roles"],
+            #"synergy_score": synergy_score
 
         })
 
