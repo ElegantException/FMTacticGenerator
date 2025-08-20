@@ -473,6 +473,12 @@ if uploaded_file:
         with st.expander(f"{item['Area']} — {item['Verdict']}"):
             st.write(f"**Suggested Fix:** {item['Fix']}")
 
+    st.markdown("### 🛡️ Tough Opponent Variant")
+    st.markdown(f"**Mentality:** {tough_variant['Mentality']}")
+    display_instruction_block("In Possession", "🛡️", tough_variant["In Possession"])
+    display_instruction_block("In Transition", "🛡️", tough_variant["In Transition"])
+    display_instruction_block("Out of Possession", "🛡️", tough_variant["Out of Possession"])
+
     #BEST 11 LINEUP
     st.markdown("### Starting XI")
     clean_lineup = pd.DataFrame(best_lineup).drop(columns=['attributes','zones'])
@@ -485,5 +491,8 @@ if uploaded_file:
     st.markdown("### Substitutes")
     st.dataframe(pd.DataFrame(clean_lineup))
 
+    from tactic_generator import SquadAnalyzer, VariantGenerator
+    analyzer = SquadAnalyzer(best_lineup)
+    variant_generator = VariantGenerator(analyzer)
+    tough_variant = variant_generator.generate("ToughOpponent")
     
-  
