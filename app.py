@@ -454,184 +454,184 @@ if uploaded_file:
     third_best_roles = third_best_entry["roles"]
     third_best_name = third_best_entry["name"]
     third_best_score = third_best_entry["score"]
+    with st.expander(f" ", expanded=True):
+        col1, col2 = st.columns([1, 1.2])  # Adjust width ratio as needed
 
-    col1, col2 = st.columns([1, 1.2])  # Adjust width ratio as needed
-
-    gap_analysis = analyze_formation_gaps(best_lineup)
-
-    with col1:
-        # Formation Summary Card
-        st.markdown(f"""
-        <div style='border: 2px solid #4CAF50; padding: 10px; border-radius: 10px; background-color: #f9f9f9'>
-            <h3 style='color: #2e7d32; margin: 0px 0;'>🥇{formation_name}</h2>
-            <p style='margin: 2px 0;'><strong>🧠 Mentality:</strong> {tactic_metadata.get("mentality", "N/A")}</p>
-            <p style='margin: 2px 0;'><strong>✅ Top Score:</strong> {top_score:.2f}</p>
-            <p style='margin: 2px 0;'><strong>📌 Top Rank:</strong> 1st of {len(formation_scores)} formations</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Tactical Instructions
-        st.markdown("### Tactic Instructions")
-        
-        display_instruction_block("In Possession", "🟢", tactic_data["instructions"]["in_possession"])
-       
-        display_instruction_block("In Transition", "🟡", tactic_data["instructions"]["in_transition"])
-
-        display_instruction_block("Out of Possession", "🔴", tactic_data["instructions"]["out_of_possession"])
-
-    with col2:
-
-        # Step 1: Organize player data
-        player_data = []
-        role_side_tracker = defaultdict(lambda: defaultdict(list))
-
-        for player in best_lineup:
-            role = player["position"]
-            side = player["side"].upper()
-            role_side_tracker[role][side].append(player)
-
-        # Build position lookup with fallback to ROLE_FLEX_MAP
-        formation_roles = {
-            (r["role"], r["side"].upper()): r["position"]
-            for r in tactic_data["roles"]
-        }
-
-        position_lookup = {}
-        for player in best_lineup:
-            role = player["position"]
-            side = player["side"].upper()
-            key = (role, side)
-
-            if key in formation_roles:
-                position_lookup[key] = formation_roles[key]
-            elif key in ROLE_FLEX_MAP:
-                position_lookup[key] = ROLE_FLEX_MAP[key]
-            else:
-                position_lookup[key] = (50, 50)  # fallback center
-
-        for role, side_groups in role_side_tracker.items():
-            for side, group in side_groups.items():
-                for player in group:
-                    x, y = position_lookup.get((role, side), (0, 0))
-                    name = player["player"]
-                    initials = "".join([word[0].upper() for word in name.split() if word])
-                    position_codes = ROLE_POSITION_SHORT.get(role, ["?"])
-                    position_label = "/".join(position_codes)
-
-                    if len(position_codes) == 1 and not any(s in position_label for s in ["R", "L"]):
-                        position_label += f" ({player['side'][0]})"
-
-                    player_data.append({
-                        "x": y,
-                        "y": x,
-                        "Initials": initials,
-                        "Full Name": name,
-                        "PositionLabel": position_label,
-                        "FullPosition": role,
-                        "FullDuty": player["duty"],
-                        "Duty": player["duty"][0]
-                    })
-
-        df = pd.DataFrame(player_data)
-
-        # Step 2: Create pitch layout
-        fig = go.Figure()
-
-        # Pitch outline
-        fig.add_trace(go.Scatter(x=[0, 0, 100, 100, 0], y=[0, 100, 100, 0, 0],
-                                mode='lines', line=dict(color="green", width=2), showlegend=False))
-
-        # Step 3a - Shadow layer
-        fig.add_trace(go.Scatter(
-            x=df["x"], y=df["y"],
-            mode="markers",
-            marker=dict(size=52, color="rgba(0, 0, 0, 0.3)"),
-            hoverinfo="skip",
-            showlegend=False
-        ))
-
-        # Step 3b: Player markers
-        fig.add_trace(go.Scatter(
-            x=df["x"], y=df["y"],
-            mode="markers",
-            marker=dict(size=44, color="blue"),
-            hovertext=df["Full Name"] + "<br>" + df["FullPosition"] + "<br>" + df["FullDuty"],
-            hoverinfo="text",
-            showlegend=False
-        ))
-
-        # Step 3c: Bold initials
-        fig.add_trace(go.Scatter(
-            x=df["x"], y=df["y"] + 2,
-            mode="text",
-            text=df["Initials"],
-            textposition="middle center",
-            textfont=dict(color="white", size=14, family="Arial"),
-            showlegend=False
-        ))
-
-        # Step 3d: Position label
-        fig.add_trace(go.Scatter(
-            x=df["x"], y=df["y"] - 1.2,
-            mode="text",
-            text=df["PositionLabel"],
-            textposition="middle center",
-            textfont=dict(color="white", size=8, family="Arial"),
-            showlegend=False
-        ))
-
-        # Step 3e: Duty label
-        fig.add_trace(go.Scatter(
-            x=df["x"], y=df["y"] - 4,
-            mode="text",
-            text="(" + df["Duty"] + ")",
-            textposition="middle center",
-            textfont=dict(color="white", size=8, family="Arial"),
-            showlegend=False
-        ))
-
-        # Step 4: Layout cleanup
-        with open("assets/fpitch.jpg", "rb") as image_file:
-            encoded_image = base64.b64encode(image_file.read()).decode()
-
-        fig.update_layout(
-            images=[dict(
-                source="data:image/jpg;base64," + encoded_image,
-                xref="x",
-                yref="y",
-                x=0,
-                y=100,
-                sizex=100,
-                sizey=100,
-                sizing="stretch",
-                layer="below"
-            )],
-            xaxis=dict(range=[0, 100], showgrid=False, visible=False),
-            yaxis=dict(range=[0, 100], showgrid=False, visible=False),
-            plot_bgcolor="rgba(0,0,0,0)",
-            margin=dict(t=20, b=20, l=20, r=20)
-        )
-
-        # Step 5: Display in Streamlit
-        st.plotly_chart(fig, use_container_width=True)
-        
-
-    #Analyze formation gaps
-    st.markdown("### 🚧 Formation — Gap Analysis")
-    for item in gap_analysis:
-        with st.expander(f"{item['Area']} — {item['Verdict']}"):
-            st.write(f"**Suggested Fix:** {item['Fix']}")
-
+        gap_analysis = analyze_formation_gaps(best_lineup)
     
-    analyzer = SquadAnalyzer(best_lineup)
-    variant_generator = VariantGenerator(analyzer)
-    tough_variant = variant_generator.generate("ToughOpponent")
+        with col1:
+            # Formation Summary Card
+            st.markdown(f"""
+            <div style='border: 2px solid #4CAF50; padding: 10px; border-radius: 10px; background-color: #f9f9f9'>
+                <h3 style='color: #2e7d32; margin: 0px 0;'>🥇{formation_name}</h2>
+                <p style='margin: 2px 0;'><strong>🧠 Mentality:</strong> {tactic_metadata.get("mentality", "N/A")}</p>
+                <p style='margin: 2px 0;'><strong>✅ Top Score:</strong> {top_score:.2f}</p>
+                <p style='margin: 2px 0;'><strong>📌 Top Rank:</strong> 1st of {len(formation_scores)} formations</p>
+            </div>
+            """, unsafe_allow_html=True)
 
-    st.markdown("### 🛡️ Tough Opponent Variant")
-    st.markdown(f"**Mentality:** {tough_variant['Mentality']}")
-    display_instruction_block("In Possession", "🛡️", tough_variant["In Possession"])
-    display_instruction_block("In Transition", "🛡️", tough_variant["In Transition"])
-    display_instruction_block("Out of Possession", "🛡️", tough_variant["Out of Possession"])
+            # Tactical Instructions
+            st.markdown("### Tactic Instructions")
+            
+            display_instruction_block("In Possession", "🟢", tactic_data["instructions"]["in_possession"])
+        
+            display_instruction_block("In Transition", "🟡", tactic_data["instructions"]["in_transition"])
+
+            display_instruction_block("Out of Possession", "🔴", tactic_data["instructions"]["out_of_possession"])
+
+        with col2:
+
+            # Step 1: Organize player data
+            player_data = []
+            role_side_tracker = defaultdict(lambda: defaultdict(list))
+
+            for player in best_lineup:
+                role = player["position"]
+                side = player["side"].upper()
+                role_side_tracker[role][side].append(player)
+
+            # Build position lookup with fallback to ROLE_FLEX_MAP
+            formation_roles = {
+                (r["role"], r["side"].upper()): r["position"]
+                for r in tactic_data["roles"]
+            }
+
+            position_lookup = {}
+            for player in best_lineup:
+                role = player["position"]
+                side = player["side"].upper()
+                key = (role, side)
+
+                if key in formation_roles:
+                    position_lookup[key] = formation_roles[key]
+                elif key in ROLE_FLEX_MAP:
+                    position_lookup[key] = ROLE_FLEX_MAP[key]
+                else:
+                    position_lookup[key] = (50, 50)  # fallback center
+
+            for role, side_groups in role_side_tracker.items():
+                for side, group in side_groups.items():
+                    for player in group:
+                        x, y = position_lookup.get((role, side), (0, 0))
+                        name = player["player"]
+                        initials = "".join([word[0].upper() for word in name.split() if word])
+                        position_codes = ROLE_POSITION_SHORT.get(role, ["?"])
+                        position_label = "/".join(position_codes)
+
+                        if len(position_codes) == 1 and not any(s in position_label for s in ["R", "L"]):
+                            position_label += f" ({player['side'][0]})"
+
+                        player_data.append({
+                            "x": y,
+                            "y": x,
+                            "Initials": initials,
+                            "Full Name": name,
+                            "PositionLabel": position_label,
+                            "FullPosition": role,
+                            "FullDuty": player["duty"],
+                            "Duty": player["duty"][0]
+                        })
+
+            df = pd.DataFrame(player_data)
+
+            # Step 2: Create pitch layout
+            fig = go.Figure()
+
+            # Pitch outline
+            fig.add_trace(go.Scatter(x=[0, 0, 100, 100, 0], y=[0, 100, 100, 0, 0],
+                                    mode='lines', line=dict(color="green", width=2), showlegend=False))
+
+            # Step 3a - Shadow layer
+            fig.add_trace(go.Scatter(
+                x=df["x"], y=df["y"],
+                mode="markers",
+                marker=dict(size=52, color="rgba(0, 0, 0, 0.3)"),
+                hoverinfo="skip",
+                showlegend=False
+            ))
+
+            # Step 3b: Player markers
+            fig.add_trace(go.Scatter(
+                x=df["x"], y=df["y"],
+                mode="markers",
+                marker=dict(size=44, color="blue"),
+                hovertext=df["Full Name"] + "<br>" + df["FullPosition"] + "<br>" + df["FullDuty"],
+                hoverinfo="text",
+                showlegend=False
+            ))
+
+            # Step 3c: Bold initials
+            fig.add_trace(go.Scatter(
+                x=df["x"], y=df["y"] + 2,
+                mode="text",
+                text=df["Initials"],
+                textposition="middle center",
+                textfont=dict(color="white", size=14, family="Arial"),
+                showlegend=False
+            ))
+
+            # Step 3d: Position label
+            fig.add_trace(go.Scatter(
+                x=df["x"], y=df["y"] - 1.2,
+                mode="text",
+                text=df["PositionLabel"],
+                textposition="middle center",
+                textfont=dict(color="white", size=8, family="Arial"),
+                showlegend=False
+            ))
+
+            # Step 3e: Duty label
+            fig.add_trace(go.Scatter(
+                x=df["x"], y=df["y"] - 4,
+                mode="text",
+                text="(" + df["Duty"] + ")",
+                textposition="middle center",
+                textfont=dict(color="white", size=8, family="Arial"),
+                showlegend=False
+            ))
+
+            # Step 4: Layout cleanup
+            with open("assets/fpitch.jpg", "rb") as image_file:
+                encoded_image = base64.b64encode(image_file.read()).decode()
+
+            fig.update_layout(
+                images=[dict(
+                    source="data:image/jpg;base64," + encoded_image,
+                    xref="x",
+                    yref="y",
+                    x=0,
+                    y=100,
+                    sizex=100,
+                    sizey=100,
+                    sizing="stretch",
+                    layer="below"
+                )],
+                xaxis=dict(range=[0, 100], showgrid=False, visible=False),
+                yaxis=dict(range=[0, 100], showgrid=False, visible=False),
+                plot_bgcolor="rgba(0,0,0,0)",
+                margin=dict(t=20, b=20, l=20, r=20)
+            )
+
+            # Step 5: Display in Streamlit
+            st.plotly_chart(fig, use_container_width=True)
+            
+
+        #Analyze formation gaps
+        st.markdown("### 🚧 Formation — Gap Analysis")
+        for item in gap_analysis:
+            with st.expander(f"{item['Area']} — {item['Verdict']}"):
+                st.write(f"**Suggested Fix:** {item['Fix']}")
+
+        
+        analyzer = SquadAnalyzer(best_lineup)
+        variant_generator = VariantGenerator(analyzer)
+        tough_variant = variant_generator.generate("ToughOpponent")
+
+        st.markdown("### 🛡️ Tough Opponent Variant")
+        st.markdown(f"**Mentality:** {tough_variant['Mentality']}")
+        display_instruction_block("In Possession", "🛡️", tough_variant["In Possession"])
+        display_instruction_block("In Transition", "🛡️", tough_variant["In Transition"])
+        display_instruction_block("Out of Possession", "🛡️", tough_variant["Out of Possession"])
 
     st.markdown("### ➕ Additional Formations")
     #2ND BEST FORMATION
@@ -674,7 +674,7 @@ if uploaded_file:
                 st.write(f"**Suggested Fix:** {item['Fix']}")
 
 
-    
+        
     #3rd BEST FORMATION
     tg_third = TacticGenerator(players=third_best_lineup)
     tg_third.player_roles = {
