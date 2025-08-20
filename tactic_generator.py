@@ -283,34 +283,6 @@ class TacticGenerator:
                             }
                             variants.append(variant)
 
-        # 💾 Save CSV to assets folder
-        if variants:
-            # make sure assets folder exists
-            os.makedirs("assets", exist_ok=True)
-            filepath = os.path.join("assets", "player_variants.csv")
-
-            with open(filepath, mode="w", newline='', encoding="utf-8") as file:
-                writer = csv.writer(file)
-                attribute_keys = sorted(variants[0]["attributes"].keys())
-
-                # Header
-                headers = ["name", "role", "side", "duty", "score", "position"] + attribute_keys
-                writer.writerow(headers)
-
-                # Rows
-                for v in variants:
-                    row = [
-                        v["name"],
-                        v["role"],
-                        ",".join(v["side"]),
-                        v["duty"],
-                        v["score"],
-                        v["position"]
-                    ] + [v["attributes"].get(k, "") for k in attribute_keys]
-                    writer.writerow(row)
-
-
-
         return sorted(variants, key=lambda x: x["score"], reverse=True)
     
     
