@@ -717,10 +717,10 @@ if uploaded_file:
     st.markdown("### Starting XI")
     clean_lineup = pd.DataFrame(best_lineup).drop(columns=['attributes','zones'])
     clean_lineup = clean_lineup[['player', *[c for c in clean_lineup.columns if c != 'player']]]
-    st.dataframe(clean_lineup)  
+    st.dataframe(clean_lineup, height=425)
     
     #SUBSTITUTES
     clean_lineup = pd.DataFrame(second_best).drop(columns=['attributes'])
     clean_lineup = clean_lineup[['player', *[c for c in clean_lineup.columns if c != 'player']]]
     st.markdown("### Substitutes")
-    st.dataframe(pd.DataFrame(clean_lineup))
+    st.dataframe(clean_lineup, height=425)
