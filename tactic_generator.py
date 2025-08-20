@@ -133,22 +133,6 @@ def is_side_compatible(player_sides, target_side, role):
     return target_side in player_sides
 
 
-def extract_side(pos: str) -> str:
-    match = re.search(r"\((.*?)\)", pos)
-    if not match:
-        return "Central"
-    token = match.group(1)
-    side_labels = []
-    if "L" in token:
-        side_labels.append("Left")
-    if "R" in token:
-        side_labels.append("Right")
-    if "C" in token:
-        side_labels.append("Central")
-    return " / ".join(side_labels)
-
-
-
 class TacticGenerator:
     def __init__(self, players):
         """
@@ -375,9 +359,6 @@ class TacticGenerator:
             score -= 1 if 'Work Ball Into Box' in final_third else 0
             score += 1 if creative_freedom == 'Be More Expressive' else -1 if creative_freedom == 'Be More Disciplined' else 0
 
-        # Debug output
-        print(f"🔍 Mobility Score: {score:.2f} (Avg Attr: {avg_attr:.2f}, Aggression: {role_aggression}, Final Third: {final_third_presence})")
-
         # Final mentality decision
         if score >= 16:
             self.mentality = "Attacking"
@@ -459,7 +440,7 @@ class TacticGenerator:
         gks = [p for p in scored_players if "GK" in p["position"]]
         outfield = [p for p in scored_players if "GK" not in p["position"]]
         final_squad = gks[:1] + outfield[:10]
-        print(f"🔍 Best XI found: {len(full_score_players)} players")
+        
         return full_score_players
     
     def normalize_position(self, pos_str):
@@ -826,9 +807,7 @@ class TacticGenerator:
         )
         uncovered_zones = [z for z in all_midfield_zones if z not in zone_counter]
 
-        # Optional: print debug info
-        print(f"🧠 Midfield zone overlaps: {overlapping_zones}")
-        print(f"🧩 Uncovered midfield zones: {uncovered_zones}")
+
 
         # Optional: attempt to resolve overlaps by swapping roles
         # (This part can be expanded with smarter logic or synergy scoring)
@@ -851,7 +830,6 @@ class TacticGenerator:
                         break
 
                 if best_alternative != p["position"]:
-                    print(f"🔄 Flexing {p['player']} from {p['position']} to {best_alternative}")
                     p["position"] = best_alternative
                     p["zones"] = ZONE_MAP.get(best_alternative, {}).get(p["side"], [])
 

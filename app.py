@@ -9,7 +9,7 @@ from synergy import calculate_synergy, select_best_pairing
 import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
-from formations import formations, ZONE_MAP, ZONE_GRID  # or define directly above if it's short
+from formations import formations, ZONE_MAP  # or define directly above if it's short
 from collections import defaultdict
 import base64
 
@@ -192,7 +192,7 @@ if uploaded_file:
             return "Moderate"
 
         connectivity = evaluate_midfield_connectivity(midfield_roles)
-        print(f"Midfield connectivity for {name}: {connectivity}")
+
         if connectivity == "Weak":
             lineup = apply_role_flex(lineup)
             lineup = tg.flex_roles_with_zone_coverage(lineup)
@@ -236,7 +236,7 @@ if uploaded_file:
                 best_pairing["player1"]["attributes"],
                 best_pairing["player2"]["attributes"]
             )
-        #print(f"Best pairing for {name}: {best_pairing['roles']} with synergy score {synergy_score}")
+        
         # Combine scores
         total_score = role_score + synergy_score * 20  # Weight synergy as needed
 
@@ -279,21 +279,14 @@ if uploaded_file:
             tactic_data["instructions"] = sanity_check_instructions(tactic_data["instructions"])
 
             mentality = tg_final.suggest_mentality(tactic_data["instructions"])
-            print(f"🧠 Mentality chosen: {mentality} based on instructions: {tactic_data['instructions']}")
+    
 
 
     # Calculate strength percentage relative to best
     for entry in formation_scores:
         entry["relative_strength"] = round((entry["score"] / best_score) * 100, 2)
     
-    print("\n--- Formation Scores ---")
-    for entry in sorted(formation_scores, key=lambda x: x["score"], reverse=True):
-        print(
-            f"Formation: {entry['name']}, "
-            f"Score: {entry['score']:.2f}, "
-            f"Relative Strength: {entry['relative_strength']:.2f}%"
-        )
-
+ 
     tactic_metadata = {
         "formation": tactic_data.get("formation", best_formation_name),
         "mentality": mentality,
@@ -312,9 +305,7 @@ if uploaded_file:
     next_best_name = "4-2-3-1 Wide"  # Replace with actual second-best logic
     next_best_score = 143.09  # Replace with actual second-best score
 
-    print("\n✅ Final lineup:")
-    for p in best_lineup:
-        print(f"{p['player']} → {p['position']} | Zones: {p.get('zones', [])}")
+
     col1, col2 = st.columns([1, 1.2])  # Adjust width ratio as needed
 
     gap_analysis = analyze_formation_gaps(best_lineup)
