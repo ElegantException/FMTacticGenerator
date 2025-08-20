@@ -90,25 +90,25 @@ ROLE_POSITION_MAP = {
     "Anchor Man": ["DM", "DMC"],
     "Half Back": ["DM", "DMC"],
     "Regista": ["DMC"],
-    "Segundo Volante": ["DMC", "MC"],
-    "Volante": ["DMC", "MC"],
-    "Ball Winning Midfielder": ["DM", "MC", "DMC"],
+    "Segundo Volante": ["DMC", "M", "MC"],
+    "Volante": ["DMC","M", "MC"],
+    "Ball Winning Midfielder": ["DM", "MC", "M", "DMC"],
 
     # ⚙️ Central Midfielders
-    "Central Midfielder": ["MC", "ML", "MR"],
+    "Central Midfielder": ["MC","M", "ML", "MR"],
     "Box-To-Box Midfielder": ["MC", "M","ML", "MR"],
-    "Mezzala": ["ML", "MR", "MC"],
-    "Carrilero": ["ML", "MR", "MC"],
-    "Deep-Lying Playmaker": ["ML", "MR","MC", "DMC"],
-    "Roaming Playmaker": ["ML", "MR","MC", "AMC"],
-    "Advanced Playmaker": ["ML", "MR","MC","AMC",],
+    "Mezzala": ["ML", "MR", "MC", "M"],
+    "Carrilero": ["ML", "MR", "M", "MC"],
+    "Deep-Lying Playmaker": ["ML", "MR","M","MC", "DMC"],
+    "Roaming Playmaker": ["ML", "MR","M", "MC", "AMC"],
+    "Advanced Playmaker": ["ML", "MR","M", "MC","AMC",],
 
     # 🎨 Attacking Midfielders
-    "Attacking Midfielder": ["AMC", "AML", "AMR"],
+    "Attacking Midfielder": ["AMC", "AM", "AML", "AMR"],
     
-    "Shadow Striker": ["AMC"],
-    "Enganche": ["AMC"],
-    "Trequartista": ["AMC"],
+    "Shadow Striker": ["AMC, "AM"],
+    "Enganche": ["AMC, "AM"],
+    "Trequartista": ["AMC", "AM"],
 
     # 🏃 Wide Midfielders
     "Wide Midfielder": ["ML", "MR"],
