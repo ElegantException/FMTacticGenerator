@@ -315,7 +315,7 @@ if uploaded_file:
         # Formation Summary Card
         st.markdown(f"""
         <div style='border: 2px solid #4CAF50; padding: 10px; border-radius: 10px; background-color: #f9f9f9'>
-            <h3 style='color: #2e7d32; margin: 0px 0;'>{formation_name}</h2>
+            <h3 style='color: #2e7d32; margin: 0px 0;'>🧬{formation_name}</h2>
             <p style='margin: 2px 0;'><strong>🧠 Mentality:</strong> {tactic_metadata.get("mentality", "N/A")}</p>
             <p style='margin: 2px 0;'><strong>✅ Top Score:</strong> {top_score:.2f}</p>
             <p style='margin: 2px 0;'><strong>📌 Top Rank:</strong> 1st of {len(formation_scores)} formations</p>
@@ -494,7 +494,7 @@ if uploaded_file:
     #SUBSTITUTES
     clean_lineup = pd.DataFrame(second_best).drop(columns=['attributes'])
     clean_lineup = clean_lineup[['player', *[c for c in clean_lineup.columns if c != 'player']]]
-    st.markdown("### 🔁 Substitutes")
+    st.markdown("### 🪑 Substitutes")
     st.dataframe(pd.DataFrame(clean_lineup))
 
     from tactic_generator import SquadAnalyzer, VariantGenerator
