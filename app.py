@@ -324,7 +324,7 @@ if uploaded_file:
         """, unsafe_allow_html=True)
 
         # Tactical Instructions
-        st.markdown("### Tactic Instructions")
+        st.markdown("### 📑 Tactic Instructions")
         
         display_instruction_block("In Possession", "🟢", tactic_data["instructions"]["in_possession"])
        
@@ -468,7 +468,7 @@ if uploaded_file:
         # Step 5: Display in Streamlit
         st.plotly_chart(fig, use_container_width=True)
         
-    st.markdown("### Potential Gaps in Formation")
+    st.markdown("### 🕳️ Potential Gaps in Formation")
     #Analyze formation gaps
     for item in gap_analysis:
         with st.expander(f"{item['Area']} — {item['Verdict']}"):
@@ -486,7 +486,7 @@ if uploaded_file:
     display_instruction_block("Out of Possession", "🛡️", tough_variant["Out of Possession"])
 
     #BEST 11 LINEUP
-    st.markdown("### Starting XI")
+    st.markdown("### 🪖 Starting XI")
     clean_lineup = pd.DataFrame(best_lineup).drop(columns=['attributes','zones'])
     clean_lineup = clean_lineup[['player', *[c for c in clean_lineup.columns if c != 'player']]]
     st.dataframe(clean_lineup)  
@@ -494,7 +494,7 @@ if uploaded_file:
     #SUBSTITUTES
     clean_lineup = pd.DataFrame(second_best).drop(columns=['attributes'])
     clean_lineup = clean_lineup[['player', *[c for c in clean_lineup.columns if c != 'player']]]
-    st.markdown("### Substitutes")
+    st.markdown("### 🔁 Substitutes")
     st.dataframe(pd.DataFrame(clean_lineup))
 
     from tactic_generator import SquadAnalyzer, VariantGenerator
