@@ -97,14 +97,15 @@ ROLE_POSITION_MAP = {
     # ⚙️ Central Midfielders
     "Central Midfielder": ["MC", "ML", "MR"],
     "Box-To-Box Midfielder": ["MC", "ML", "MR"],
-    "Mezzala": ["ML", "MR"],
-    "Carrilero": ["ML", "MR"],
-    "Deep-Lying Playmaker": ["MC", "DMC"],
-    "Roaming Playmaker": ["MC", "AMC"],
+    "Mezzala": ["ML", "MR", "MC"],
+    "Carrilero": ["ML", "MR", "MC"],
+    "Deep-Lying Playmaker": ["ML", "MR","MC", "DMC"],
+    "Roaming Playmaker": ["ML", "MR","MC", "AMC"],
+    "Advanced Playmaker": ["ML", "MR","MC","AMC",],
 
     # 🎨 Attacking Midfielders
     "Attacking Midfielder": ["AMC", "AML", "AMR"],
-    "Advanced Playmaker": ["AMC", "AML", "AMR"],
+    
     "Shadow Striker": ["AMC"],
     "Enganche": ["AMC"],
     "Trequartista": ["AMC"],
